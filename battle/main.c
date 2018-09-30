@@ -156,6 +156,8 @@ void updateMap(int pass)
 	case 1:
 		break;
 	case 2:
+		updateLevelMap();
+		updateEnemies();
 		break;
 	}
 }
@@ -182,7 +184,7 @@ void updateSprites()
 
 void showMessage(const char *message)
 {
-	print_at(0,1,message);
+	print_at(0,1,(char *)message);
 }
 
 void main()

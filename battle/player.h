@@ -62,4 +62,9 @@ extern int enemyCount;
 void calculatePlayerBuffs(struct Player *player);
 // returns exp gained from attacking.
 int attackPlayer(struct Player *target, int power, int type);
+// returns attack with critical, etc. built in
+int calculateAttackPower(struct Player *source, int method);
 
+
+// enemy.c
+void updateEnemies();

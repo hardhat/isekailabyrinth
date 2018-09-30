@@ -3,3 +3,4 @@ extern byte map[MAPCOUNT];
 #define MAPWIDTH 6
 #define MAPHEIGHT 6
 
+extern void updateLevelMap();

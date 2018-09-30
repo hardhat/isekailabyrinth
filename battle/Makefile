@@ -1,4 +1,4 @@
-OBJ=player.rel level.rel buffs.rel main.rel
+OBJ=player.rel enemy.rel level.rel buffs.rel main.rel
 
 all: result.rom
 
@@ -8,7 +8,10 @@ main.rel: main.c
 player.rel: player.c actions.h player.h level.h
 	sdcc -I.. -mz80 -c --std-c99 player.c
 
-level.rel: level.c level.h
+enemy.rel: enemy.c actions.h player.h level.h
+	sdcc -I.. -mz80 -c --std-c99 enemy.c
+
+level.rel: level.c level.h player.h
 	sdcc -I.. -mz80 -c --std-c99 level.c
 
 buffs.rel: buffs.c player.h
