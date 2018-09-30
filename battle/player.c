@@ -4,14 +4,19 @@
 #include "player.h"
 #include "level.h"
 
+struct Player hero[6];
+int heroCount;
+struct Player enemy[6];
+int enemyCount;
+
 char reachMap[MAPCOUNT];
 
 // factors in level, playerType, weaponType, armorType
 void calculatePlayerBuffs(struct Player *player)
 {
-	struct Buffs *base=playerType+player->type;
-	struct Buffs *weapon=weaponType+player->weapon;
-	struct Buffs *armor=armorType+player->armor;
+	const struct Buffs *base=playerType+(player->type&127);
+	const struct Buffs *weapon=weaponType+player->weapon;
+	const struct Buffs *armor=armorType+player->armor;
 	
 	int level=player->level;
 
@@ -30,10 +35,15 @@ void calculatePlayerBuffs(struct Player *player)
 int attackPlayer(struct Player *target, int power, int method)
 {
 	int health=target->hp;
+	int level=target->level;
 
-	power-=playerType[target->type].resistance[method];
-	power-=weaponType[target->weapon].resistance[method];
-	power-=armorType[target->armor].resistance[method];
+	const struct Buffs *base=playerType+(target->type&127);
+	const struct Buffs *weapon=weaponType+target->weapon;
+	const struct Buffs *armor=armorType+target->armor;
+
+	power-=base->baseDef[method]+base->gainDef[method]*level;
+	power-=weapon->baseDef[method]+weapon->gainDef[method]*level;
+	power-=armor->baseDef[method]+armor->gainDef[method]*level;
 
 	if(power<0) {
 		showMessage("No Effect");
@@ -49,6 +59,27 @@ int attackPlayer(struct Player *target, int power, int method)
 			target->hp=0;
 			return target->level;
 		}
+	}
+
+	return 0;
+}
+
+int calculateAttackPower(struct Player *source, int method)
+{
+	int level=source->level;
+	int power=0;
+	
+	const struct Buffs *base=playerType+source->type;
+	const struct Buffs *weapon=weaponType+source->weapon;
+	const struct Buffs *armor=armorType+source->armor;
+
+	power-=base->baseAtk[method]+base->gainAtk[method]*level;
+	power-=weapon->baseAtk[method]+weapon->gainAtk[method]*level;
+	power-=armor->baseAtk[method]+armor->gainAtk[method]*level;
+
+	if(power<0) {
+		showMessage("No Effect");
+		return 0;
 	}
 
 	return 0;
@@ -82,13 +113,64 @@ void calculateReach(int cell, int mobility)
 	}
 }
 
+int directionToTarget(int sx,int sy,int tx,int ty)
+{
+	int dx=sx-tx,dy=sy-ty;
+	if(dx<0) dx=-dx;
+	if(dy<0) dy=-dy;
+	if(dx+dy<=1) return -1;
+	if(dx>dy) return sx>tx?0:2;
+	return sy>ty?1:3;
+}
+
+int distanceToTarget(int sx,int sy,int tx,int ty)
+{
+	int dx=sx-tx,dy=sy-ty;
+	if(dx<0) dx=-dx;
+	if(dy<0) dy=-dy;
+	return dx+dy;
+}
+
+void movePlayer(struct Player *player,int direction)
+{
+	const int dx[4]={1,0,-1,0};
+	const int dy[4]={0,MAPWIDTH,0,-MAPWIDTH};
+
+	if(direction<0) return;
+
+	player->cell+=dx[direction];
+	player->cell+=dy[direction];
+}
+
+struct Player *calculateNearestHero(int sx,int sy)
+{
+	int i;
+
+	struct Player *closest=hero+0;
+	int closestDistance=MAPWIDTH+MAPHEIGHT;
+	for(i=0;i<heroCount;i++) {
+		int tx=hero[i].cell%MAPWIDTH;
+		int ty=hero[i].cell/MAPWIDTH;
+		int d=distanceToTarget(sx,sy,tx,ty);
+
+		if(d<closestDistance) {
+			closest=hero+i;
+			closestDistance=d;
+		}
+	}
+
+	return closest;
+}
+
 void planPlayer(struct Player *source)
 {
 	// choose potion, heal, melee attack, range attack
+	struct Player *target;
 	int mobility;
-	int healWorth,healCell;
-	int attackWorth,attackCell;
 	int type=source->type&127;
+	int tx,ty,sx,sy;
+	int method=AT_PHYSICAL;
+	int attack=calculateAttackPower(source,method);
 
 	mobility=playerType[source->type].mobility;
 	mobility-=weaponType[source->type].mobility;
@@ -96,9 +178,22 @@ void planPlayer(struct Player *source)
 	calculateReach(source->cell,mobility);
 	// choose heal, attack
 	// movement
+	sx=source->cell%MAPWIDTH;
+	sy=source->cell/MAPWIDTH;
+	target=calculateNearestHero(sx,sy);
+	tx=target->cell%MAPWIDTH;
+	ty=target->cell/MAPWIDTH;
+	while(mobility>0) {
+		int direction;
 
-	// TODO: apply luck here for critical hit
+		sx=source->cell%MAPWIDTH;
+		sy=source->cell%MAPHEIGHT;
+		direction=directionToTarget(sx,sy,tx,ty);
+		movePlayer(source,direction);
+		mobility--;
+	}
+
 	// apply attack
-	
+	attackPlayer(target,attack,method);
 }
 

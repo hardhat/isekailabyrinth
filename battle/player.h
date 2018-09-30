@@ -18,8 +18,11 @@ struct Buffs {
 	byte gainHp;
 	byte baseMp;
 	byte gainMp;
-	byte afinity;	// magic
-	byte resistance[8];	// magic
+	byte afinity;	// method: AT_* physical, magic type
+	byte baseAtk[8];	// method
+	byte gainAtk[8];	// method
+	byte baseDef[8];	// method
+	byte gainDef[8];	// method
 	byte luck;	// dodge or critical hit likelyhood.  out of 255
 };
 
@@ -45,8 +48,15 @@ enum AffinityMask {
 	AM_SPACE=128,
 };
 
-extern struct Buffs *playerType, *armorType, *weaponType;
-extern int maxPlayerType, maxArmorType, maxWeaponType;
+extern const struct Buffs playerType[], armorType[], weaponType[];
+extern const int maxPlayerType, maxArmorType, maxWeaponType;
+
+#define MAXHERO 6
+extern struct Player hero[MAXHERO];
+extern int heroCount;
+#define MAXENEMY 6
+extern struct Player enemy[MAXENEMY];
+extern int enemyCount;
 
 // factors in level, playerType, weaponType, armorType
 void calculatePlayerBuffs(struct Player *player);

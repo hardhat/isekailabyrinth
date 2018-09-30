@@ -6,7 +6,10 @@
 #include <comp.h>
 
 #include "level.h"
+#include "player.h"
 #include "actions.h"
+
+#define M_BATTLE 0
 
 const char *rankName[]={
 	"Knight",
@@ -28,11 +31,11 @@ const byte spritepattern[]={
 	0xf0,0,0,0,0,0,0,0,0,
 	0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,
 	0x80,0x40,0x20,0x10,0x08,0x04,0x02,0x01,
-}
+};
 
 const byte tilepattern[]={
 	0xaa,0x55,0xaa,0x55,0xaa,0x55,0xaa,0x55,
-}
+};
 
 byte cursorx,cursory;
 
@@ -70,7 +73,7 @@ void init()
 
 void newgame()
 {
-	int i,j;
+	int i;
 	cursorx=128-8;
 	cursory=64;
 
@@ -113,15 +116,18 @@ void drawMapTile(byte x,byte y,byte tile)
 void drawLine(int y)
 {
 	byte *from=map+y*MAPWIDTH;
+	int i;
 
-	for(i=0;i<6;i++)
+	for(i=0;i<6;i++) {
 		drawMapTile(i,y,from[i]);
 	}
 }
 
 void drawMap(int pass)
 {
-	int y;
+	int i,y;
+	int health=0;
+
 	if(pass==0) {
 		for(y=0;y<3;y++) {
 			drawLine(y);
@@ -131,6 +137,9 @@ void drawMap(int pass)
 			drawLine(y);
 		}
 	}
+	for(i=0;i<heroCount;i++) {
+		health+=hero[i].hp;
+	}
 	if(health==0) {
 		print_at(8,20," GAME OVER! ");
 		if(joypad_1&FIRE1) newgame();
@@ -139,7 +148,7 @@ void drawMap(int pass)
 
 void updateMap(int pass)
 {
-	byte i,j;
+	//byte i,j;
 	
 	switch(pass) {
 	case 0:
@@ -169,14 +178,18 @@ void updateSprites()
 
 	//updatesprites(0,30);
 	put_vram(0x1b00,sprites,128);
-	
-	frame++;
+}
+
+void showMessage(const char *message)
+{
+	print_at(0,1,message);
 }
 
 void main()
 {
 	int pass=0;
 	int drawMode=0;
+	int gameMode=M_BATTLE;
 
 	disable_nmi();
 	
@@ -185,14 +198,13 @@ void main()
 	cls();
 	drawMap(0);
 	drawMap(1);
-	gameMode=M_FIELD;
 	
 	enable_nmi();
 
 	while(1) {
 		disable_nmi();
 		// update the state of the character.
-		if(gameMode==M_FIELD) {
+		if(gameMode==M_BATTLE) {
 			updateSprites();
 			updateMap(pass);
 		} else {
