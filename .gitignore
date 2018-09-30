@@ -3,6 +3,14 @@
 
 *.swp
 
+#sdcc files
+*.asm
+*.lst
+*.ihx
+*.lk
+*.sym
+*.noi
+
 # Object files
 *.o
 *.ko
