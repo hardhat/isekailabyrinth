@@ -48,6 +48,28 @@ enum AffinityMask {
 	AM_SPACE=128,
 };
 
+enum EnemyMode {
+	EM_NEWTURN,	// Start planning a new turn for the enemies
+	EM_MOVE,	// Making a plan to move
+	EM_MOVING,	// Animation system is waiting for completion on this move
+	EM_ACTION,	// Making a plan for an action
+	EM_ACTING,	// Animation system is waiting for completion of this action
+	EM_APPLY,	// Apply the action
+	EM_DONETURN,// This enemy is done
+};
+
+struct EnemyPlan {
+	byte mode;
+	
+	byte id;		// current enemy that is active.
+	byte mobility;	// how much movement this enemy has left before their action
+	byte direction;		// direction to move to in mode EM_MOVING
+	
+	struct Player *target;	// what we plan to deliver
+	byte power;
+	byte method;
+};
+
 extern const struct Buffs playerType[], armorType[], weaponType[];
 extern const int maxPlayerType, maxArmorType, maxWeaponType;
 
@@ -65,6 +87,8 @@ int attackPlayer(struct Player *target, int power, int type);
 // returns attack with critical, etc. built in
 int calculateAttackPower(struct Player *source, int method);
 
+// hero.c
+void initHeroParty();
 
 // enemy.c
-void updateEnemies();
+struct EnemyPlan *updateEnemy(int mode);

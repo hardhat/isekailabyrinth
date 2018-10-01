@@ -16,7 +16,7 @@ const struct Buffs playerType[]={
 const int maxPlayerType=9;
 
 const struct Buffs weaponType[]={
-	{"STICK",0,0,0,0,1,},
+	{"FISTS",0,0,0,0,1,},
 	{"BROAD SWORD",7,0,0,0,1,},
 	{"RAPIER",5,0,0,0,1,},
 	{"SHORT SWORD",3,0,0,0,1,},
@@ -34,8 +34,9 @@ const struct Buffs armorType[]={
 	{"HARD LEATHER ARMOR",},
 	{"CHAIN MAIL",},
 	{"PLATE ARMOR",},
+	{"FULL PLATE ARMOR",},
 	{"MAGIC ROBE",},
 	{"HOLY ROBE",},
 };
-const int maxArmorType=7;
+const int maxArmorType=8;
 

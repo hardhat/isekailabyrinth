@@ -3,6 +3,8 @@
 #include "level.h"
 #include "player.h"
 
+struct EnemyPlan enemyPlan;
+
 #if 0
 char reachMap[MAPCOUNT];
 
@@ -40,7 +42,7 @@ void movePlayer(struct Player *player,int direction)
 	const int dx[4]={1,0,-1,0};
 	const int dy[4]={0,MAPWIDTH,0,-MAPWIDTH};
 
-	if(direction<0) return;
+	if(direction<0 || direction==255) return;
 
 	player->cell+=dx[direction];
 	player->cell+=dy[direction];
@@ -88,43 +90,82 @@ struct Player *calculateNearestHero(int sx,int sy)
 void planEnemy(struct Player *source)
 {
 	// choose potion, heal, melee attack, range attack
-	struct Player *target;
-	int mobility;
 	int type=source->type&127;
-	int tx,ty,sx,sy;
-	int method=AT_PHYSICAL;
-	int attack=calculateAttackPower(source,method);
+
+	enemyPlan.method=AT_PHYSICAL;
+	enemyPlan.power=calculateAttackPower(source,enemyPlan.method);
 
 	if(source->hp==0) return;	// dead!
-	mobility=playerType[source->type].mobility;
-	mobility-=weaponType[source->type].mobility;
-	mobility-=armorType[source->type].mobility;
+	enemyPlan.mobility=playerType[type].mobility;
+	enemyPlan.mobility-=weaponType[type].mobility;
+	enemyPlan.mobility-=armorType[type].mobility;
+
 	//calculateReach(source->cell,mobility);
 	// choose heal, attack
+}
+
+void moveEnemy(struct Player *source)
+{
+	int tx,ty,sx,sy;
+
 	// movement
 	sx=source->cell%MAPWIDTH;
 	sy=source->cell/MAPWIDTH;
-	target=calculateNearestHero(sx,sy);
-	tx=target->cell%MAPWIDTH;
-	ty=target->cell/MAPWIDTH;
-	while(mobility>0) {
-		int direction;
-
-		sx=source->cell%MAPWIDTH;
-		sy=source->cell%MAPHEIGHT;
-		direction=directionToTarget(sx,sy,tx,ty);
-		movePlayer(source,direction);
-		mobility--;
-	}
-
-	// apply attack
-	attackPlayer(target,attack,method);
+	enemyPlan.target=calculateNearestHero(sx,sy);
+	tx=enemyPlan.target->cell%MAPWIDTH;
+	ty=enemyPlan.target->cell/MAPWIDTH;
+	
+	sx=source->cell%MAPWIDTH;
+	sy=source->cell%MAPHEIGHT;
+	enemyPlan.direction=directionToTarget(sx,sy,tx,ty);
+	enemyPlan.mobility--;
 }
 
-void updateEnemies()
+struct EnemyPlan *updateEnemy(int mode)
 {
-	int i;
-	for(i=0;i<enemyCount;i++) {
-		planEnemy(enemy+i);
+	struct Player *active;
+	
+	switch(mode) {
+	case EM_NEWTURN:
+		enemyPlan.mode=EM_MOVE;
+		enemyPlan.id=0;
+		// fall through
+	case EM_MOVE:
+		active=enemy+enemyPlan.id;
+		enemyPlan.direction=255;
+		planEnemy(active);
+		
+		enemyPlan.mode=EM_MOVING;
+		// fall through
+	case EM_MOVING:
+		active=enemy+enemyPlan.id;
+		movePlayer(active,enemyPlan.direction);
+
+		if(enemyPlan.mobility>0) {
+			moveEnemy(active);
+			if(enemyPlan.direction!=255) break;
+		}
+		enemyPlan.mode=EM_ACTION;
+		break;
+	case EM_ACTION:	// was planned at the plan step
+		enemyPlan.mode=EM_ACTING;
+		break;
+	case EM_ACTING:	// animating
+		enemyPlan.mode=EM_APPLY;
+		break;
+	case EM_APPLY:	// damage dealt
+		attackPlayer(enemyPlan.target,enemyPlan.power,enemyPlan.method);
+
+		if(enemyPlan.id+1<enemyCount) {
+			enemyPlan.id++;
+			enemyPlan.mode=EM_MOVE;
+		} else {
+			enemyPlan.mode=EM_DONETURN;
+		}
+		break;
+	case EM_DONETURN:
+		break;
 	}
+	
+	return &enemyPlan;
 }

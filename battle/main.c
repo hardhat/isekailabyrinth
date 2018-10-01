@@ -38,6 +38,9 @@ const byte tilepattern[]={
 };
 
 byte cursorx,cursory;
+byte enemyReady;
+extern struct EnemyPlan enemyPlan;
+
 
 void init()
 {
@@ -88,6 +91,8 @@ void newgame()
 		sprites[i].pattern=0;
 		sprites[i].colour=1;
 	}
+	
+	enemyReady=1;
 }
 
 const byte tileList[4][16]={
@@ -157,7 +162,8 @@ void updateMap(int pass)
 		break;
 	case 2:
 		updateLevelMap();
-		updateEnemies();
+		
+		if(enemyReady) updateEnemy(enemyPlan.mode);
 		break;
 	}
 }
