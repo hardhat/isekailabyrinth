@@ -37,6 +37,27 @@ void calculateReach(int cell, int mobility)
 }
 #endif
 
+void resetEnemy()
+{
+	enemyCount=0;
+}
+
+int newEnemy(int type, int level, int armor, int weapon, int cell)
+{
+	int id=enemyCount++;
+	struct Player *player=enemy+id;
+
+	if(id>6) return 0;
+	player->type=type;
+	player->level=level;
+	player->armor=armor;
+	player->weapon=weapon;
+	player->cell=cell;
+	calculatePlayerBuffs(player);
+	player->mp=player->maxMp;
+	player->hp=player->maxHp;
+}
+
 void movePlayer(struct Player *player,int direction)
 {
 	const int dx[4]={1,0,-1,0};

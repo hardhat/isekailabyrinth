@@ -91,4 +91,5 @@ int calculateAttackPower(struct Player *source, int method);
 void initHeroParty();
 
 // enemy.c
+int newEnemy(int type, int armor, int weapon, int level, int cell);
 struct EnemyPlan *updateEnemy(int mode);

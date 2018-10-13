@@ -82,3 +82,4 @@ int calculateAttackPower(struct Player *source, int method)
 
 	return 0;
 }
+

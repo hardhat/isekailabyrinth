@@ -50,8 +50,8 @@ void init()
     screen_mode_2_bitmap();
 	sprites_16x16();
     //load_colorrle(COLORRLE);
-	fill_vram(0,6144,0xf4);
-	for(i=0x1024;i<1536;i+=8) {
+	//fill_vram(0,6144,0xf4);
+	for(i=1024;i<1536;i+=8) {
 		put_vram(8912+i,tilepattern,8);
 	}
     //load_patternrle(PATTERNRLE);
@@ -206,8 +206,14 @@ void main()
 	cls();
 	drawMap(0);
 	drawMap(1);
+
+	print_at(0,0,"Welcome to the Fantasy Zone");
 	
 	enable_nmi();
+	
+	while((joypad_1 & FIRE1)==0) {
+		delay(1);
+	}
 
 	while(1) {
 		disable_nmi();
@@ -228,7 +234,8 @@ void main()
 			drawMode=0;
 			pass=0;
 		}
-
+		print_at(8,8,"RUTTLES");
+	
 		enable_nmi();
 		delay(1);
 	}
